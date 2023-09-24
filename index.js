@@ -23,8 +23,6 @@ admin.initializeApp({
     databaseURL: fireBaseURL,
 });
 
-console.log();
-
 const db = admin.database();
 
 app.use(cors());
@@ -89,10 +87,14 @@ app.post("/authenticate", async (req, res) => {
         }
 
         const matchedUserData = [];
+        const keyID = [];
 
         snapshot.forEach((childSnapshot) => {
             const userData = childSnapshot.val();
             matchedUserData.push(userData);
+            keyID.push({
+                key: childSnapshot.key,
+            });
         });
 
         if (matchedUserData.length !== 1) {
@@ -108,7 +110,7 @@ app.post("/authenticate", async (req, res) => {
             return res.status(401).json({ message: "Invalid password" });
         }
 
-        const token = jwt.sign({ id: user.id }, secretKey, {
+        const token = jwt.sign({ id: keyID[0].key }, secretKey, {
             expiresIn: "1h",
         });
 
@@ -116,7 +118,6 @@ app.post("/authenticate", async (req, res) => {
         res.status(200).json({
             token: token,
         });
-        res.json({ matchedUsernames: matchedUserData });
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json({ message: "An error occurred." });
